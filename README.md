@@ -1,32 +1,35 @@
-﻿ResultEdge
+﻿# ResultEdge
 
-ResultEdge is a lightweight, expressive Result pattern implementation for .NET that helps you write clear, predictable,
-and exception-free business logic.
+**ResultEdge** is a lightweight, expressive Result pattern implementation for .NET that helps you write clear, predictable, and exception-free business logic.
 
-It enables you to model success and failure explicitly, improving readability, testability, and correctness across your
-application.
+It enables you to model success and failure explicitly, improving readability, testability, and correctness across your application.
 
-✨ Features
+---
 
-Simple and expressive Result and Result<T> types
+## ✨ Features
 
-Explicit success / failure flow
+- Simple and expressive `Result` and `Result<T>` types
+- Explicit success / failure flow
+- No exceptions for control flow
+- Immutable and thread-safe
+- Zero dependencies
+- Designed for Clean Architecture & DDD
+- Works perfectly with async code
 
-No exceptions for control flow
+---
 
-Immutable and thread-safe
+## 📦 Installation
 
-Zero dependencies
+Install via NuGet:
 
-Designed for clean architecture & DDD
-
-Works perfectly with async code
-
-📦 Installation
+```
 dotnet add package ResultEdge
+```
 
-🚀 Basic Usage
+## 🚀 Basic Usage
 Creating results
+
+```
 var success = Result.Success();
 var failure = Result.Failure("Something went wrong");
 
@@ -37,44 +40,38 @@ if (result.IsSuccess)
 {
 Console.WriteLine(result.Value);
 }
+```
 
+## 🎯 Why ResultEdge?
 
-🎯 Why ResultEdge?
+- Avoids exceptions as control flow
+- Encourages explicit, predictable code paths
+- Improves readability in complex business logic
+- Works perfectly with Clean Architecture & CQRS
+- Minimal API surface — no magic, no hidden behavior
 
-Avoids exceptions as control flow
-
-Encourages explicit, predictable code paths
-
-Improves readability in complex business logic
-
-Works perfectly with Clean Architecture & CQRS
-
-Minimal API surface — no magic, no hidden behavior
-
-🧪 Testing Friendly
+## 🧪 Testing Friendly
 
 ResultEdge is designed to be easy to test:
 
+```
 result.IsFailure.Should().BeTrue();
 result.Error.Should().Be("Invalid input");
-
-📂 Project Structure
+```
+## 📂 Project Structure
+```
 ResultEdge/
 ├── ResultEdge/
 └── ResultEdge.Tests/
+```
+## 🤝 Contributing
 
-🤝 Contributing
+- Contributions are welcome!
+- Fork the repo
+- Create a feature branch
+- Add tests
+- Submit a PR
 
-Contributions are welcome!
-
-Fork the repo
-
-Create a feature branch
-
-Add tests
-
-Submit a PR
-
-📄 License
+## 📄 License
 
 MIT License
