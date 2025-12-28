@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpResult", "SharpResult\SharpResult.csproj", "{D4268285-07EC-4191-8DD4-DC9B0840A95F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResultEdge", "ResultEdge\ResultEdge.csproj", "{D4268285-07EC-4191-8DD4-DC9B0840A95F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpResult.Tests", "SharpResult.Tests\SharpResult.Tests.csproj", "{6C2426CE-79C9-4AF3-9CCC-31E1A6EE911E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResultEdge.Tests", "ResultEdge.Tests\ResultEdge.Tests.csproj", "{6C2426CE-79C9-4AF3-9CCC-31E1A6EE911E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

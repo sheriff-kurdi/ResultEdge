@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace SharpResult;
+namespace ResultEdge;
 public class Result<T> : IResult
 {
     protected Result() { }

@@ -1,6 +1,6 @@
-﻿SharpResult
+﻿ResultEdge
 
-SharpResult is a lightweight, expressive Result pattern implementation for .NET that helps you write clear, predictable,
+ResultEdge is a lightweight, expressive Result pattern implementation for .NET that helps you write clear, predictable,
 and exception-free business logic.
 
 It enables you to model success and failure explicitly, improving readability, testability, and correctness across your
@@ -23,7 +23,7 @@ Designed for clean architecture & DDD
 Works perfectly with async code
 
 📦 Installation
-dotnet add package SharpResult
+dotnet add package ResultEdge
 
 🚀 Basic Usage
 Creating results
@@ -39,7 +39,7 @@ Console.WriteLine(result.Value);
 }
 
 
-🎯 Why SharpResult?
+🎯 Why ResultEdge?
 
 Avoids exceptions as control flow
 
@@ -53,15 +53,15 @@ Minimal API surface — no magic, no hidden behavior
 
 🧪 Testing Friendly
 
-SharpResult is designed to be easy to test:
+ResultEdge is designed to be easy to test:
 
 result.IsFailure.Should().BeTrue();
 result.Error.Should().Be("Invalid input");
 
 📂 Project Structure
-SharpResult/
-├── SharpResult/
-└── SharpResult.Tests/
+ResultEdge/
+├── ResultEdge/
+└── ResultEdge.Tests/
 
 🤝 Contributing
 

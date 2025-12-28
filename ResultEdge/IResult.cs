@@ -1,4 +1,4 @@
-﻿namespace SharpResult;
+﻿namespace ResultEdge;
 
 public interface IResult
 {

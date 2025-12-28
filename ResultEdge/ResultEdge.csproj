@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+
+        <PackageId>ResultEdge</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Sheriff Kurdi</Authors>
+        <Company>Sheriff Kurdi</Company>
+        <Description>Lightweight Result pattern for clean and explicit error handling in .NET.</Description>
+        <PackageTags>result;functional;ddd;clean-architecture</PackageTags>
+        <RepositoryUrl>https://github.com/sheriff-kurdi/ResultEdge</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <RootNamespace>ResultEdge</RootNamespace>
+        
+        
+    </PropertyGroup>
+
+</Project>

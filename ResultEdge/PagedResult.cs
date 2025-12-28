@@ -1,4 +1,4 @@
-﻿namespace SharpResult;
+﻿namespace ResultEdge;
 
   public class PagedResult<T> : Result<T>
     {
