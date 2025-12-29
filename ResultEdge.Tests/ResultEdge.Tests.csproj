@@ -19,4 +19,8 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\ResultEdge\ResultEdge.csproj"/>
+    </ItemGroup>
+
 </Project>
