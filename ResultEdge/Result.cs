@@ -5,12 +5,12 @@ public class Result<T> : IResult
 {
     protected Result() { }
 
-    public Result(T value)
+    public Result(T data)
     {
-        Value = value;
+        Data = data;
     }
 
-    protected internal Result(T value, string successMessage) : this(value)
+    protected internal Result(T data, string successMessage) : this(data)
     {
         SuccessMessage = successMessage;
     }
@@ -20,8 +20,8 @@ public class Result<T> : IResult
         Status = status;
     }
 
-    public static implicit operator T(Result<T> result) => result.Value!;
-    public static implicit operator Result<T>(T value) => new Result<T>(value);
+    public static implicit operator T(Result<T> result) => result.Data!;
+    public static implicit operator Result<T>(T data) => new(data);
 
     public static implicit operator Result<T>(Result result) => new Result<T>(default(T)!)
     {
@@ -32,10 +32,10 @@ public class Result<T> : IResult
         ValidationErrors = result.ValidationErrors,
     };
 
-    public T? Value { get; }
+    public T? Data { get; }
 
     [JsonIgnore]
-    public Type ValueType => typeof(T);
+    public Type DataType => typeof(T);
     public ResultStatus Status { get; protected set; } = ResultStatus.Ok;
     public bool IsSuccess => Status == ResultStatus.Ok;
     public string SuccessMessage { get; protected set; } = string.Empty;
@@ -44,12 +44,12 @@ public class Result<T> : IResult
     public List<ValidationError> ValidationErrors { get; protected set; } = new List<ValidationError>();
 
     /// <summary>
-    /// Returns the current value.
+    /// Returns the current data.
     /// </summary>
     /// <returns></returns>
-    public object GetValue()
+    public object GetData()
     {
-        return this.Value!;
+        return this.Data!;
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public class Result<T> : IResult
     /// <returns></returns>
     public PagedResult<T> ToPagedResult(PagedInfo pagedInfo)
     {
-        var pagedResult = new PagedResult<T>(pagedInfo, Value!)
+        var pagedResult = new PagedResult<T>(pagedInfo, Data!)
         {
             Status = Status,
             SuccessMessage = SuccessMessage,
@@ -74,23 +74,23 @@ public class Result<T> : IResult
     /// <summary>
     /// Represents a successful operation and accepts a values as the result of the operation
     /// </summary>
-    /// <param name="value">Sets the Value property</param>
+    /// <param name="data">Sets the Data property</param>
     /// <returns>A Result<typeparamref name="T"/></returns>
-    public static Result<T> Success(T value)
+    public static Result<T> Success(T data)
     {
-        return new Result<T>(value);
+        return new Result<T>(data);
     }
 
     /// <summary>
     /// Represents a successful operation and accepts a values as the result of the operation
     /// Sets the SuccessMessage property to the provided value
     /// </summary>
-    /// <param name="value">Sets the Value property</param>
+    /// <param name="data">Sets the Data property</param>
     /// <param name="successMessage">Sets the SuccessMessage property</param>
     /// <returns>A Result<typeparamref name="T"/></returns>
-    public static Result<T> Success(T value, string successMessage)
+    public static Result<T> Success(T data, string successMessage)
     {
-        return new Result<T>(value, successMessage);
+        return new Result<T>(data, successMessage);
     }
 
     /// <summary>
