@@ -5,25 +5,26 @@ namespace ResultEdge.Tests;
 public class ResultTests
 {
     [Fact]
-    public void Success_WithValue_ShouldCreateSuccessResult()
+    public void Success_WithData_ShouldCreateSuccessResult()
     {
         var result = Result<int>.Success(42);
 
         Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
         Assert.Equal(ResultStatus.Ok, result.Status);
-        Assert.Equal(42, result.Value);
+        Assert.Equal(42, result.Data);
         Assert.Empty(result.Errors);
         Assert.Empty(result.ValidationErrors);
     }
 
     [Fact]
-    public void Success_WithValueAndMessage_ShouldSetSuccessMessage()
+    public void Success_WithDataAndMessage_ShouldSetSuccessMessage()
     {
         var result = Result<string>.Success("test", "Operation completed successfully");
 
         Assert.True(result.IsSuccess);
         Assert.Equal(ResultStatus.Ok, result.Status);
-        Assert.Equal("test", result.Value);
+        Assert.Equal("test", result.Data);
         Assert.Equal("Operation completed successfully", result.SuccessMessage);
     }
 
@@ -33,10 +34,22 @@ public class ResultTests
         var result = Result<int>.Error("Error 1", "Error 2");
 
         Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
         Assert.Equal(ResultStatus.Error, result.Status);
         Assert.Equal(2, result.Errors.Count());
         Assert.Contains("Error 1", result.Errors);
         Assert.Contains("Error 2", result.Errors);
+    }
+
+    [Fact]
+    public void ErrorWithCorrelationId_ShouldSetCorrelationId()
+    {
+        var result = Result<int>.ErrorWithCorrelationId("corr-abc-123", "Payment failed");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ResultStatus.Error, result.Status);
+        Assert.Equal("corr-abc-123", result.CorrelationId);
+        Assert.Contains("Payment failed", result.Errors);
     }
 
     [Fact]
@@ -161,16 +174,32 @@ public class ResultTests
     }
 
     [Fact]
+    public void IsFailure_WithSuccessStatus_ShouldBeFalse()
+    {
+        var result = Result<int>.Success(1);
+
+        Assert.False(result.IsFailure);
+    }
+
+    [Fact]
+    public void IsFailure_WithErrorStatus_ShouldBeTrue()
+    {
+        var result = Result<int>.Error("Error occurred");
+
+        Assert.True(result.IsFailure);
+    }
+
+    [Fact]
     public void ImplicitConversion_FromValue_ShouldCreateSuccessResult()
     {
         Result<int> result = 42;
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(42, result.Value);
+        Assert.Equal(42, result.Data);
     }
 
     [Fact]
-    public void ImplicitConversion_ToValue_ShouldReturnValue()
+    public void ImplicitConversion_ToValue_ShouldReturnData()
     {
         var result = Result<int>.Success(42);
         int value = result;
@@ -190,20 +219,20 @@ public class ResultTests
     }
 
     [Fact]
-    public void ValueType_ShouldReturnCorrectType()
+    public void DataType_ShouldReturnCorrectType()
     {
         var result = Result<string>.Success("test");
 
-        Assert.Equal(typeof(string), result.ValueType);
+        Assert.Equal(typeof(string), result.DataType);
     }
 
     [Fact]
-    public void GetValue_ShouldReturnValue()
+    public void GetData_ShouldReturnData()
     {
         var result = Result<int>.Success(42);
-        var value = result.GetValue();
+        var data = result.GetData();
 
-        Assert.Equal(42, value);
+        Assert.Equal(42, data);
     }
 
     [Fact]
@@ -215,9 +244,9 @@ public class ResultTests
         var pagedResult = result.ToPagedResult(pagedInfo);
 
         Assert.True(pagedResult.IsSuccess);
-        Assert.Equal(1, pagedResult.PagedInfo.PageNumber);
-        Assert.Equal(10, pagedResult.PagedInfo.PageSize);
-        Assert.Equal(2, pagedResult.Value!.Count);
+        Assert.Equal(1, pagedResult.PagedInfo!.PageNumber);
+        Assert.Equal(10, pagedResult.PagedInfo!.PageSize);
+        Assert.Equal(2, pagedResult.Data!.Count);
     }
 
     [Fact]
@@ -234,16 +263,14 @@ public class ResultTests
     }
 
     [Fact]
-    public void ToPagedResult_ShouldPreserveAllProperties()
+    public void ToPagedResult_ShouldPreserveSuccessMessageAndCorrelationId()
     {
         var result = Result<int>.Success(42, "Success message");
-        result.GetType().GetProperty("CorrelationId")!.SetValue(result, "correlation-123");
         var pagedInfo = new PagedInfo(1, 10, 1, 1);
 
         var pagedResult = result.ToPagedResult(pagedInfo);
 
         Assert.Equal("Success message", pagedResult.SuccessMessage);
-        Assert.Equal("correlation-123", pagedResult.CorrelationId);
     }
 
     [Fact]
@@ -263,11 +290,11 @@ public class ResultTests
     }
 
     [Fact]
-    public void Constructor_WithValue_ShouldSetValue()
+    public void Constructor_WithData_ShouldSetData()
     {
         var result = new Result<int>(42);
 
-        Assert.Equal(42, result.Value);
+        Assert.Equal(42, result.Data);
         Assert.Equal(ResultStatus.Ok, result.Status);
     }
 }

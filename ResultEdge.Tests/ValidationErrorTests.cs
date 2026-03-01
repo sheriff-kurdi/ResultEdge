@@ -48,7 +48,7 @@ public class ValidationErrorTests
     }
 
     [Fact]
-    public void Properties_ShouldBeSettable()
+    public void ObjectInitializer_ShouldSetProperties()
     {
         var error = new ValidationError
         {
@@ -103,14 +103,14 @@ public class ValidationErrorTests
     {
         var errors = new List<ValidationError>
         {
-            new ValidationError("Field1", "Error", "ERR_001", ValidationSeverity.Error),
+            new ValidationError("Field1", "Error",   "ERR_001",  ValidationSeverity.Error),
             new ValidationError("Field2", "Warning", "WARN_001", ValidationSeverity.Warning),
-            new ValidationError("Field3", "Info", "INFO_001", ValidationSeverity.Info)
+            new ValidationError("Field3", "Info",    "INFO_001", ValidationSeverity.Info)
         };
 
-        Assert.Equal(ValidationSeverity.Error, errors[0].Severity);
+        Assert.Equal(ValidationSeverity.Error,   errors[0].Severity);
         Assert.Equal(ValidationSeverity.Warning, errors[1].Severity);
-        Assert.Equal(ValidationSeverity.Info, errors[2].Severity);
+        Assert.Equal(ValidationSeverity.Info,    errors[2].Severity);
     }
 
     [Fact]
@@ -118,10 +118,10 @@ public class ValidationErrorTests
     {
         var error = new ValidationError
         {
-            Identifier = "Age",
-            ErrorMessage = "Age must be between 0 and 120",
-            ErrorCode = "AGE_RANGE",
-            Severity = ValidationSeverity.Error
+            Identifier    = "Age",
+            ErrorMessage  = "Age must be between 0 and 120",
+            ErrorCode     = "AGE_RANGE",
+            Severity      = ValidationSeverity.Error
         };
 
         Assert.Equal("Age", error.Identifier);
@@ -139,18 +139,14 @@ public class ValidationErrorTests
     }
 
     [Fact]
-    public void ValidationError_CanBeModifiedAfterCreation()
+    public void Properties_AreInitOnly_NotMutableAfterConstruction()
     {
-        var error = new ValidationError("Initial message");
+        // init-only properties cannot be assigned after construction; verify via reflection
+        var prop = typeof(ValidationError).GetProperty(nameof(ValidationError.Identifier))!;
+        var setter = prop.SetMethod!;
 
-        error.ErrorMessage = "Updated message";
-        error.Identifier = "UpdatedField";
-        error.ErrorCode = "UPD_001";
-        error.Severity = ValidationSeverity.Warning;
-
-        Assert.Equal("Updated message", error.ErrorMessage);
-        Assert.Equal("UpdatedField", error.Identifier);
-        Assert.Equal("UPD_001", error.ErrorCode);
-        Assert.Equal(ValidationSeverity.Warning, error.Severity);
+        // init setters have IsExternalInit as a required modifier on the return parameter
+        var modifiers = setter.ReturnParameter.GetRequiredCustomModifiers();
+        Assert.Contains(modifiers, m => m.Name == "IsExternalInit");
     }
 }

@@ -31,7 +31,7 @@ public class ResultVoidTests
         var result = Result.Success(42);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(42, result.Value);
+        Assert.Equal(42, result.Data);
         Assert.IsType<Result<int>>(result);
     }
 
@@ -41,7 +41,7 @@ public class ResultVoidTests
         var result = Result.Success("test", "Success message");
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("test", result.Value);
+        Assert.Equal("test", result.Data);
         Assert.Equal("Success message", result.SuccessMessage);
     }
 

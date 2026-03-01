@@ -5,14 +5,14 @@ namespace ResultEdge.Tests;
 public class PagedResultTests
 {
     [Fact]
-    public void Constructor_ShouldSetValueAndPagedInfo()
+    public void Constructor_ShouldSetDataAndPagedInfo()
     {
         var pagedInfo = new PagedInfo(1, 10, 5, 50);
         var items = new List<string> { "Item1", "Item2", "Item3" };
 
         var pagedResult = new PagedResult<List<string>>(pagedInfo, items);
 
-        Assert.Equal(items, pagedResult.Value);
+        Assert.Equal(items, pagedResult.Data);
         Assert.Equal(pagedInfo, pagedResult.PagedInfo);
     }
 
@@ -20,9 +20,8 @@ public class PagedResultTests
     public void Constructor_ShouldInheritFromResult()
     {
         var pagedInfo = new PagedInfo(1, 10, 1, 5);
-        var value = 42;
 
-        var pagedResult = new PagedResult<int>(pagedInfo, value);
+        var pagedResult = new PagedResult<int>(pagedInfo, 42);
 
         Assert.IsAssignableFrom<Result<int>>(pagedResult);
     }
@@ -36,6 +35,7 @@ public class PagedResultTests
         var pagedResult = new PagedResult<List<int>>(pagedInfo, items);
 
         Assert.True(pagedResult.IsSuccess);
+        Assert.False(pagedResult.IsFailure);
         Assert.Equal(ResultStatus.Ok, pagedResult.Status);
     }
 
@@ -63,8 +63,8 @@ public class PagedResultTests
         var pagedResult = new PagedResult<List<string>>(pagedInfo, items);
 
         Assert.True(pagedResult.IsSuccess);
-        Assert.Empty(pagedResult.Value!);
-        Assert.Equal(0, pagedResult.PagedInfo.TotalRecords);
+        Assert.Empty(pagedResult.Data!);
+        Assert.Equal(0, pagedResult.PagedInfo!.TotalRecords);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class PagedResultTests
 
         var pagedResult = new PagedResult<List<int>>(pagedInfo, items);
 
-        Assert.Single(pagedResult.Value!);
-        Assert.Equal(42, pagedResult.Value[0]);
+        Assert.Single(pagedResult.Data!);
+        Assert.Equal(42, pagedResult.Data![0]);
     }
 
     [Fact]
@@ -91,9 +91,9 @@ public class PagedResultTests
 
         var pagedResult = new PagedResult<List<ComplexObject>>(pagedInfo, items);
 
-        Assert.Equal(2, pagedResult.Value!.Count);
-        Assert.Equal("Object1", pagedResult.Value[0].Name);
-        Assert.Equal(2, pagedResult.PagedInfo.PageNumber);
+        Assert.Equal(2, pagedResult.Data!.Count);
+        Assert.Equal("Object1", pagedResult.Data[0].Name);
+        Assert.Equal(2, pagedResult.PagedInfo!.PageNumber);
     }
 
     [Fact]
@@ -120,8 +120,8 @@ public class PagedResultTests
         var pagedResult = result.ToPagedResult(pagedInfo);
 
         Assert.IsType<PagedResult<List<int>>>(pagedResult);
-        Assert.Equal(5, pagedResult.Value!.Count);
-        Assert.Equal(pagedInfo.PageNumber, pagedResult.PagedInfo.PageNumber);
+        Assert.Equal(5, pagedResult.Data!.Count);
+        Assert.Equal(pagedInfo.PageNumber, pagedResult.PagedInfo!.PageNumber);
     }
 
     [Fact]
@@ -132,19 +132,18 @@ public class PagedResultTests
 
         var pagedResult = new PagedResult<List<int>>(pagedInfo, items);
 
-        Assert.Equal(1000, pagedResult.PagedInfo.PageNumber);
-        Assert.Equal(50, pagedResult.Value!.Count);
+        Assert.Equal(1000, pagedResult.PagedInfo!.PageNumber);
+        Assert.Equal(50, pagedResult.Data!.Count);
     }
 
     [Fact]
-    public void PagedResult_WithStringValue_ShouldWork()
+    public void PagedResult_WithStringData_ShouldWork()
     {
         var pagedInfo = new PagedInfo(1, 1, 1, 1);
-        var value = "Single string value";
 
-        var pagedResult = new PagedResult<string>(pagedInfo, value);
+        var pagedResult = new PagedResult<string>(pagedInfo, "Single string value");
 
-        Assert.Equal("Single string value", pagedResult.Value);
+        Assert.Equal("Single string value", pagedResult.Data);
         Assert.True(pagedResult.IsSuccess);
     }
 
@@ -155,12 +154,12 @@ public class PagedResultTests
 
         var pagedResult = new PagedResult<int>(pagedInfo, 42);
 
-        Assert.Equal(42, pagedResult.Value);
-        Assert.Equal(typeof(int), pagedResult.ValueType);
+        Assert.Equal(42, pagedResult.Data);
+        Assert.Equal(typeof(int), pagedResult.DataType);
     }
 
     [Fact]
-    public void PagedResult_PagedInfo_CanBeModifiedViaSetters()
+    public void PagedResult_PagedInfo_ReflectsPagedInfoMutation()
     {
         var pagedInfo = new PagedInfo(1, 10, 5, 50);
         var items = new List<string> { "Item1" };
@@ -168,8 +167,8 @@ public class PagedResultTests
 
         pagedInfo.SetPageNumber(2).SetTotalRecords(100);
 
-        Assert.Equal(2, pagedResult.PagedInfo.PageNumber);
-        Assert.Equal(100, pagedResult.PagedInfo.TotalRecords);
+        Assert.Equal(2, pagedResult.PagedInfo!.PageNumber);
+        Assert.Equal(100, pagedResult.PagedInfo!.TotalRecords);
     }
 
     [Fact]
@@ -180,21 +179,82 @@ public class PagedResultTests
 
         var pagedResult = new PagedResult<string[]>(pagedInfo, items);
 
-        Assert.Equal(3, pagedResult.Value!.Length);
-        Assert.Equal("B", pagedResult.Value[1]);
+        Assert.Equal(3, pagedResult.Data!.Length);
+        Assert.Equal("B", pagedResult.Data[1]);
     }
 
     [Fact]
-    public void PagedResult_GetValue_ShouldReturnValue()
+    public void PagedResult_GetData_ShouldReturnData()
     {
         var pagedInfo = new PagedInfo(1, 10, 1, 10);
         var items = new List<int> { 1, 2, 3 };
         var pagedResult = new PagedResult<List<int>>(pagedInfo, items);
 
-        var value = pagedResult.GetValue();
+        var data = pagedResult.GetData();
 
-        Assert.IsType<List<int>>(value);
-        Assert.Equal(3, ((List<int>)value).Count);
+        Assert.IsType<List<int>>(data);
+        Assert.Equal(3, ((List<int>)data!).Count);
+    }
+
+    // ── Error factory methods ────────────────────────────────────────────────
+
+    [Fact]
+    public void Error_ShouldSetStatusAndNullPagedInfo()
+    {
+        var result = PagedResult<List<int>>.Error("Something went wrong");
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Equal(ResultStatus.Error, result.Status);
+        Assert.Null(result.PagedInfo);
+        Assert.Contains("Something went wrong", result.Errors);
+    }
+
+    [Fact]
+    public void ErrorWithCorrelationId_ShouldSetCorrelationIdAndNullPagedInfo()
+    {
+        var result = PagedResult<List<int>>.ErrorWithCorrelationId("corr-123", "Failure");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ResultStatus.Error, result.Status);
+        Assert.Equal("corr-123", result.CorrelationId);
+        Assert.Null(result.PagedInfo);
+    }
+
+    [Fact]
+    public void NotFound_ShouldSetStatusAndNullPagedInfo()
+    {
+        var result = PagedResult<List<int>>.NotFound("No items found");
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ResultStatus.NotFound, result.Status);
+        Assert.Null(result.PagedInfo);
+    }
+
+    [Fact]
+    public void Success_StaticFactory_ShouldCreateSuccessPagedResult()
+    {
+        var pagedInfo = new PagedInfo(1, 10, 3, 25);
+        var items = new List<int> { 1, 2, 3 };
+
+        var result = PagedResult<List<int>>.Success(pagedInfo, items);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(pagedInfo, result.PagedInfo);
+        Assert.Equal(items, result.Data);
+    }
+
+    [Fact]
+    public void Success_StaticFactory_WithMessage_ShouldSetSuccessMessage()
+    {
+        var pagedInfo = new PagedInfo(1, 10, 1, 3);
+        var items = new List<string> { "a", "b", "c" };
+
+        var result = PagedResult<List<string>>.Success(pagedInfo, items, "Loaded successfully");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Loaded successfully", result.SuccessMessage);
+        Assert.Equal(pagedInfo, result.PagedInfo);
     }
 
     private class ComplexObject

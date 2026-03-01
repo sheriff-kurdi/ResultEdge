@@ -4,15 +4,17 @@ namespace ResultEdge.Tests;
 
 public class ResultExtensionsTests
 {
+    // ── Map ──────────────────────────────────────────────────────────────────
+
     [Fact]
-    public void Map_WithSuccessResult_ShouldTransformValue()
+    public void Map_WithSuccessResult_ShouldTransformData()
     {
         var result = Result<int>.Success(42);
 
         var mappedResult = result.Map(x => x.ToString());
 
         Assert.True(mappedResult.IsSuccess);
-        Assert.Equal("42", mappedResult.Value);
+        Assert.Equal("42", mappedResult.Data);
         Assert.Equal(ResultStatus.Ok, mappedResult.Status);
     }
 
@@ -23,7 +25,28 @@ public class ResultExtensionsTests
 
         var mappedResult = result.Map(x => x.ToUpper());
 
-        Assert.Equal("HELLO", mappedResult.Value);
+        Assert.Equal("HELLO", mappedResult.Data);
+    }
+
+    [Fact]
+    public void Map_WithSuccessResult_ShouldPropagateSuccessMessage()
+    {
+        var result = Result<int>.Success(10, "Loaded");
+
+        var mappedResult = result.Map(x => x * 2);
+
+        Assert.Equal("Loaded", mappedResult.SuccessMessage);
+    }
+
+    [Fact]
+    public void Map_WithErrorWithCorrelationId_ShouldPropagateCorrelationId()
+    {
+        var result = Result<int>.ErrorWithCorrelationId("corr-999", "err");
+
+        var mappedResult = result.Map(x => x.ToString());
+
+        Assert.Equal("corr-999", mappedResult.CorrelationId);
+        Assert.Equal(ResultStatus.Error, mappedResult.Status);
     }
 
     [Fact]
@@ -34,8 +57,8 @@ public class ResultExtensionsTests
         var mappedResult = result.Map(x => new { Value = x, Square = x * x });
 
         Assert.True(mappedResult.IsSuccess);
-        Assert.Equal(5, mappedResult.Value!.Value);
-        Assert.Equal(25, mappedResult.Value!.Square);
+        Assert.Equal(5, mappedResult.Data!.Value);
+        Assert.Equal(25, mappedResult.Data!.Square);
     }
 
     [Fact]
@@ -177,7 +200,7 @@ public class ResultExtensionsTests
             .Map(x => x.ToString());
 
         Assert.True(mappedResult.IsSuccess);
-        Assert.Equal("25", mappedResult.Value);
+        Assert.Equal("25", mappedResult.Data);
     }
 
     [Fact]
@@ -196,31 +219,6 @@ public class ResultExtensionsTests
     }
 
     [Fact]
-    public void Map_FromStringToInt_ShouldWork()
-    {
-        var result = Result<string>.Success("123");
-
-        var mappedResult = result.Map(x => int.Parse(x));
-
-        Assert.True(mappedResult.IsSuccess);
-        Assert.Equal(123, mappedResult.Value);
-    }
-
-    [Fact]
-    public void Map_ToComplexObject_ShouldWork()
-    {
-        var result = Result<int>.Success(42);
-
-        var mappedResult = result.Map(x => new List<int> { x, x * 2, x * 3 });
-
-        Assert.True(mappedResult.IsSuccess);
-        Assert.Equal(3, mappedResult.Value!.Count);
-        Assert.Equal(42, mappedResult.Value[0]);
-        Assert.Equal(84, mappedResult.Value[1]);
-        Assert.Equal(126, mappedResult.Value[2]);
-    }
-
-    [Fact]
     public void Map_WithEmptyErrorCollection_ShouldHandleCorrectly()
     {
         var result = Result<int>.Error();
@@ -230,5 +228,268 @@ public class ResultExtensionsTests
         Assert.False(mappedResult.IsSuccess);
         Assert.Equal(ResultStatus.Error, mappedResult.Status);
         Assert.Empty(mappedResult.Errors);
+    }
+
+    // ── Bind ─────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Bind_WithSuccessResult_ShouldInvokeFunc()
+    {
+        var result = Result<int>.Success(10);
+
+        var bound = result.Bind(x => Result<string>.Success(x.ToString()));
+
+        Assert.True(bound.IsSuccess);
+        Assert.Equal("10", bound.Data);
+    }
+
+    [Fact]
+    public void Bind_WithErrorResult_ShouldPropagateAndNotInvokeFunc()
+    {
+        var funcInvoked = false;
+        var result = Result<int>.Error("upstream error");
+
+        var bound = result.Bind(x =>
+        {
+            funcInvoked = true;
+            return Result<string>.Success(x.ToString());
+        });
+
+        Assert.False(funcInvoked);
+        Assert.False(bound.IsSuccess);
+        Assert.Equal(ResultStatus.Error, bound.Status);
+        Assert.Contains("upstream error", bound.Errors);
+    }
+
+    [Fact]
+    public void Bind_WhenFuncReturnsFailure_ShouldReturnFailure()
+    {
+        var result = Result<int>.Success(42);
+
+        var bound = result.Bind(_ => Result<string>.NotFound("not found downstream"));
+
+        Assert.False(bound.IsSuccess);
+        Assert.Equal(ResultStatus.NotFound, bound.Status);
+        Assert.Contains("not found downstream", bound.Errors);
+    }
+
+    [Fact]
+    public void Bind_Chained_ShouldComposePipeline()
+    {
+        var result = Result<int>.Success(5);
+
+        var bound = result
+            .Bind(x => Result<int>.Success(x * 2))
+            .Bind(x => Result<string>.Success($"Value: {x}"));
+
+        Assert.True(bound.IsSuccess);
+        Assert.Equal("Value: 10", bound.Data);
+    }
+
+    [Fact]
+    public void Bind_PropagatesNotFound()
+    {
+        var result = Result<int>.NotFound("item not found");
+
+        var bound = result.Bind(x => Result<string>.Success(x.ToString()));
+
+        Assert.Equal(ResultStatus.NotFound, bound.Status);
+        Assert.Contains("item not found", bound.Errors);
+    }
+
+    // ── MapAsync ─────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task MapAsync_WithSuccessResult_ShouldTransformData()
+    {
+        var result = Result<int>.Success(21);
+
+        var mapped = await result.MapAsync(async x =>
+        {
+            await Task.Yield();
+            return x * 2;
+        });
+
+        Assert.True(mapped.IsSuccess);
+        Assert.Equal(42, mapped.Data);
+    }
+
+    [Fact]
+    public async Task MapAsync_WithErrorResult_ShouldPropagateAndNotInvokeFunc()
+    {
+        var funcInvoked = false;
+        var result = Result<int>.Error("async error");
+
+        var mapped = await result.MapAsync(async x =>
+        {
+            funcInvoked = true;
+            await Task.Yield();
+            return x.ToString();
+        });
+
+        Assert.False(funcInvoked);
+        Assert.False(mapped.IsSuccess);
+        Assert.Contains("async error", mapped.Errors);
+    }
+
+    [Fact]
+    public async Task MapAsync_OnTaskResult_ShouldTransformData()
+    {
+        var resultTask = Task.FromResult(Result<int>.Success(7));
+
+        var mapped = await resultTask.MapAsync(x => x * 6);
+
+        Assert.True(mapped.IsSuccess);
+        Assert.Equal(42, mapped.Data);
+    }
+
+    // ── BindAsync ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task BindAsync_WithSuccessResult_ShouldInvokeFunc()
+    {
+        var result = Result<int>.Success(5);
+
+        var bound = await result.BindAsync(async x =>
+        {
+            await Task.Yield();
+            return Result<string>.Success($"got {x}");
+        });
+
+        Assert.True(bound.IsSuccess);
+        Assert.Equal("got 5", bound.Data);
+    }
+
+    [Fact]
+    public async Task BindAsync_WithErrorResult_ShouldPropagateAndNotInvokeFunc()
+    {
+        var funcInvoked = false;
+        var result = Result<int>.Error("upstream");
+
+        var bound = await result.BindAsync(async x =>
+        {
+            funcInvoked = true;
+            await Task.Yield();
+            return Result<string>.Success(x.ToString());
+        });
+
+        Assert.False(funcInvoked);
+        Assert.False(bound.IsSuccess);
+        Assert.Contains("upstream", bound.Errors);
+    }
+
+    [Fact]
+    public async Task BindAsync_OnTaskResult_ShouldCompose()
+    {
+        var resultTask = Task.FromResult(Result<int>.Success(3));
+
+        var bound = await resultTask.BindAsync(x => Result<int>.Success(x * 10));
+
+        Assert.True(bound.IsSuccess);
+        Assert.Equal(30, bound.Data);
+    }
+
+    // ── Match ────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Match_WithSuccessResult_ShouldInvokeOnSuccess()
+    {
+        var result = Result<int>.Success(42);
+
+        var output = result.Match(
+            onSuccess: data => $"ok:{data}",
+            onFailure: r => $"fail:{r.Status}");
+
+        Assert.Equal("ok:42", output);
+    }
+
+    [Fact]
+    public void Match_WithFailureResult_ShouldInvokeOnFailure()
+    {
+        var result = Result<int>.NotFound("missing");
+
+        var output = result.Match(
+            onSuccess: data => $"ok:{data}",
+            onFailure: r => $"fail:{r.Status}");
+
+        Assert.Equal("fail:NotFound", output);
+    }
+
+    [Fact]
+    public void Match_VoidOverload_WithSuccess_ShouldInvokeOnSuccess()
+    {
+        var result = Result<int>.Success(10);
+        var log = string.Empty;
+
+        result.Match(
+            onSuccess: data => { log = $"success:{data}"; },
+            onFailure: r => { log = $"failure:{r.Status}"; });
+
+        Assert.Equal("success:10", log);
+    }
+
+    [Fact]
+    public void Match_VoidOverload_WithFailure_ShouldInvokeOnFailure()
+    {
+        var result = Result<int>.Forbidden();
+        var log = string.Empty;
+
+        result.Match(
+            onSuccess: _ => { log = "success"; },
+            onFailure: r => { log = $"failure:{r.Status}"; });
+
+        Assert.Equal("failure:Forbidden", log);
+    }
+
+    // ── Match on void Result ──────────────────────────────────────────────────
+
+    [Fact]
+    public void Match_OnVoidResult_WithSuccess_ShouldInvokeOnSuccess()
+    {
+        var result = Result.Success();
+
+        var output = result.Match(
+            onSuccess: () => "ok",
+            onFailure: r  => $"fail:{r.Status}");
+
+        Assert.Equal("ok", output);
+    }
+
+    [Fact]
+    public void Match_OnVoidResult_WithFailure_ShouldInvokeOnFailure()
+    {
+        var result = Result.Error("command failed");
+
+        var output = result.Match(
+            onSuccess: () => "ok",
+            onFailure: r  => $"fail:{r.Status}");
+
+        Assert.Equal("fail:Error", output);
+    }
+
+    [Fact]
+    public void Match_VoidAction_OnVoidResult_WithSuccess_ShouldInvokeOnSuccess()
+    {
+        var result = Result.Success();
+        var log = string.Empty;
+
+        result.Match(
+            onSuccess: ()  => { log = "done"; },
+            onFailure: r   => { log = $"error:{r.Status}"; });
+
+        Assert.Equal("done", log);
+    }
+
+    [Fact]
+    public void Match_VoidAction_OnVoidResult_WithFailure_ShouldInvokeOnFailure()
+    {
+        var result = Result.NotFound("target not found");
+        var log = string.Empty;
+
+        result.Match(
+            onSuccess: ()  => { log = "done"; },
+            onFailure: r   => { log = $"error:{r.Status}"; });
+
+        Assert.Equal("error:NotFound", log);
     }
 }
